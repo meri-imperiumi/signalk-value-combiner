@@ -1,0 +1,31 @@
+{
+  "name": "@meri-imperiumi/signalk-value-combiner",
+  "version": "1.0.0",
+  "description": "Combine values from multiple Signal K paths",
+  "main": "plugin/index.js",
+  "scripts": {
+    "test": "eslint ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/meri-imperiumi/signalk-value-combiner.git"
+  },
+  "keywords": [
+    "signalk-node-server-plugin",
+    "signalk-category-utility"
+  ],
+  "author": "Henri Bergius <henri.bergius@iki.fi>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/meri-imperiumi/signalk-value-combiner/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://github.com/meri-imperiumi/signalk-value-combiner#readme",
+  "devDependencies": {
+    "eslint": "^8.57.1",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.32.0"
+  }
+}
