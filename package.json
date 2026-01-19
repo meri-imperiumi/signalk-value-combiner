@@ -1,6 +1,6 @@
 {
   "name": "@meri-imperiumi/signalk-value-combiner",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Combine values from multiple Signal K paths",
   "main": "plugin/index.js",
   "scripts": {
