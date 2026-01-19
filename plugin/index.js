@@ -46,19 +46,41 @@ module.exports = (app) => {
         // Produce outputs
         const outputs = [];
         settings.paths.forEach((path) => {
-          let sum = 0;
-          for (let i = 0; i < path.input.length; i += 1) {
-            const inputPath = path.input[i];
-            if (typeof values[inputPath] === 'undefined') {
-              console.log(`Path ${path.output} is missing ${inputPath}`);
-              return;
+          const operation = path.operation || 'addition';
+          // Collect numbers just for this one
+          const numbers = Object
+            .keys(values)
+            .filter((p) => path.input.indexOf(p) !== -1)
+            .map((p) => values[p]);
+          let result = 0;
+          switch (operation) {
+            case 'multiplication': {
+              if (numbers.length < 2) {
+                app.debug(`Missing values for computation ${path.output}`);
+                break;
+              }
+              result = numbers.shift();
+              for (let i = 0; i < numbers.length; i += 1) {
+                result *= numbers[i];
+              }
+              outputs.push({
+                path: path.output,
+                value: result,
+              });
+              break;
             }
-            sum += values[inputPath];
+            case 'addition':
+            default: {
+              for (let i = 0; i < numbers.length; i += 1) {
+                result += numbers[i];
+              }
+              outputs.push({
+                path: path.output,
+                value: result,
+              });
+              break;
+            }
           }
-          outputs.push({
-            path: path.output,
-            value: sum,
-          });
         });
         if (!outputs.length) {
           app.setPluginStatus('No values to publish');
@@ -117,6 +139,21 @@ module.exports = (app) => {
             output: {
               title: 'Output path',
               type: 'string',
+            },
+            operation: {
+              type: 'string',
+              description: 'Operation',
+              default: 'addition',
+              oneOf: [
+                {
+                  const: 'addition',
+                  title: '+',
+                },
+                {
+                  const: 'multiplication',
+                  title: '*',
+                },
+              ],
             },
           },
         },
