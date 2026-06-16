@@ -5,6 +5,8 @@ This plugin combines the values from multiple paths to create a new value. Usage
 
 ## Changes
 
+* 1.1.1 (2026-06-16)
+  - Added app icon
 * 1.1.0 (2026-01-19)
   - Added support for multiplication
 * 1.0.0 (2025-08-05)
