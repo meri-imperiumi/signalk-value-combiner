@@ -5,4 +5,4 @@ This plugin combines the values from multiple paths to create a new value. Usage
 
 ## Changes
 
-See <CHANGELOG.md>.
+See [Changelog](CHANGELOG.md)
