@@ -3,6 +3,12 @@ const combiner = require('./combiner');
 module.exports = (app) => {
   const plugin = {};
   const values = {};
+  // Input path -> meta (units, etc.) recorded from subscription deltas.
+  // Used to infer the unit of combined output paths.
+  const inputMeta = {};
+  // Output path -> units last published as meta, so we only emit a
+  // meta delta when the inferred unit actually changes.
+  const publishedUnits = {};
   let unsubscribes = [];
   plugin.id = 'signalk-value-combiner';
   plugin.name = 'Value combiner';
@@ -36,16 +42,20 @@ module.exports = (app) => {
         if (!delta.updates) {
           return;
         }
-        // Record inputs
+        // Record inputs and their meta
         delta.updates.forEach((u) => {
-          if (!u.values) {
-            return;
+          if (u.values) {
+            u.values.forEach((v) => {
+              values[v.path] = v.value;
+            });
           }
-          u.values.forEach((v) => {
-            values[v.path] = v.value;
-          });
+          if (u.meta) {
+            u.meta.forEach((m) => {
+              inputMeta[m.path] = m.value || {};
+            });
+          }
         });
-        const outputs = combiner(values, settings, app);
+        const { outputs, meta } = combiner(values, settings, app, inputMeta);
         if (!outputs.length) {
           app.setPluginStatus('No values to publish');
           return;
@@ -62,6 +72,31 @@ module.exports = (app) => {
             },
           ],
         });
+        // Publish inferred units (and other meta) for outputs whose
+        // unit changed since the last emission. Sent as a separate
+        // meta delta so it isn't repeated on every value update.
+        const metaToSend = meta.filter((m) => {
+          const units = m.value && m.value.units;
+          if (publishedUnits[m.path] === units) {
+            return false;
+          }
+          publishedUnits[m.path] = units;
+          return true;
+        });
+        if (metaToSend.length) {
+          app.handleMessage(plugin.id, {
+            context: `vessels.${app.selfId}`,
+            updates: [
+              {
+                source: {
+                  label: plugin.id,
+                },
+                timestamp: (new Date().toISOString()),
+                meta: metaToSend,
+              },
+            ],
+          });
+        }
         app.setPluginStatus(`Published ${outputs.length} values`);
       },
     );
@@ -70,6 +105,12 @@ module.exports = (app) => {
   plugin.stop = () => {
     Object.keys(values).forEach((key) => {
       delete values[key];
+    });
+    Object.keys(inputMeta).forEach((key) => {
+      delete inputMeta[key];
+    });
+    Object.keys(publishedUnits).forEach((key) => {
+      delete publishedUnits[key];
     });
     unsubscribes.forEach((f) => f());
     unsubscribes = [];
